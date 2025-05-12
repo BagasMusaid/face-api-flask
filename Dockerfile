@@ -1,6 +1,9 @@
-FROM python:3.10
+# Stage 1: Build stage
+FROM python:3.10 as builder
 
-# Install system dependencies
+WORKDIR /app
+
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
@@ -11,16 +14,22 @@ RUN apt-get update && apt-get install -y \
     libboost-all-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /app
-
-# Salin semua file ke container
 COPY . .
 
-# Install Python dependencies
-RUN python -m venv venv
-RUN ./venv/bin/pip install --upgrade pip
-RUN ./venv/bin/pip install -r requirements.txt
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
 
-# Jalankan aplikasi dengan Gunicorn (misalnya app.py dengan Flask)
-CMD ["./venv/bin/gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
+# Stage 2: Runtime stage
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Copy virtualenv from builder
+COPY --from=builder /opt/venv /opt/venv
+COPY . .
+
+ENV PATH="/opt/venv/bin:$PATH"
+
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
