@@ -4,7 +4,7 @@ from .routes import predict_bp
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+    CORS(app, resources={r"/*": {"origins": "*"}})
     
     # Register blueprint
     app.register_blueprint(predict_bp)
