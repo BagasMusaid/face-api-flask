@@ -4,6 +4,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 import json
 from PIL import Image
+from flask_cors import CORS
 import io
 import base64
 import face_recognition
@@ -11,6 +12,7 @@ import os
 import requests
 
 predict_bp = Blueprint("predict_bp", __name__)
+CORS(predict_bp, resources={r"/predict": {"origins": "*"}}) 
 
 # URL endpoint Laravel untuk mendapatkan file model dan label encoder
 model_url = 'http://127.0.0.1:8000/get-model'
